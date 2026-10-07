@@ -71,5 +71,5 @@ sentiment-app/
 
 | Rôle | Nom | Identifiant GitHub | Travail de la semaine 1 |
 | --- | --- | --- | --- |
-| Membre A | [Nom 1] | [@login] | |
-| Membre B | [Nom 2] | [@login] | |
+| Membre A | Hiba Ayatallah | [@HibaAyatallah](https://github.com/HibaAyatallah) | Création du dépôt GitHub et premier push du kit; cadrage en binôme; commit du README. |
+| Membre B | Manal Wassila | [@manalwassila](https://github.com/manalwassila) | Clonage du dépôt et vérification de l'environnement; cadrage en binôme; commit du README. |
