@@ -1,42 +1,101 @@
-"""Logique pure pour l'interface de démonstration du TP3."""
+"""Fonctions pures de l'interface : chargement du modèle, prédiction, résumé.
+
+Séparées de app.py pour être testables sans lancer Streamlit.
+Supporte à la fois l'API officielle du TP3 et les helpers compatibles.
+"""
 from __future__ import annotations
 
 from io import StringIO
+from pathlib import Path
+import sys
 from typing import Any
 
 import pandas as pd
 
+RACINE = Path(__file__).resolve().parents[1]
+MODELE = RACINE / "models" / "sentiment.joblib"
 DEFAULT_SEUIL_INCERTITUDE = 0.60
-SEUIL_INCERTITUDE = DEFAULT_SEUIL_INCERTITUDE
+SEUIL_INCERTITUDE = DEFAULT_SEUIL_INCERTITUDE   # en dessous, on affiche « à vérifier »
 
+
+def charger_predicteur():
+    """Renvoie la fonction predict() du TP2, ou lève FileNotFoundError."""
+    if not MODELE.exists():
+        raise FileNotFoundError(
+            "models/sentiment.joblib absent : lancez d'abord python src/train.py"
+        )
+    sys.path.insert(0, str(RACINE / "src"))
+    from predict import predict  # noqa: E402  (import tardif : le modèle doit exister)
+    return predict
+
+
+def classer(texte: str, predicteur=None) -> dict[str, Any]:
+    """Prédiction enrichie d'un verdict lisible par un non-spécialiste."""
+    if not isinstance(texte, str) or not texte.strip():
+        raise ValueError("texte vide")
+    if predicteur is None:
+        predicteur = charger_predicteur()
+    resultat = dict(predicteur(texte))
+    score = float(resultat["score"])
+    incertain = score < SEUIL_INCERTITUDE
+    resultat["incertain"] = incertain
+    resultat["verdict"] = "à vérifier" if incertain else str(resultat["label"])
+    return resultat
+
+
+def predire_lot(df: pd.DataFrame, predicteur=None, colonne: str = "review") -> pd.DataFrame:
+    """Ajoute les colonnes prediction, confiance et verdict à un tableau d'avis."""
+    if colonne not in df.columns:
+        raise KeyError(f"colonne '{colonne}' absente du fichier")
+    if predicteur is None:
+        predicteur = charger_predicteur()
+    lignes = [classer(str(t), predicteur) for t in df[colonne].fillna("") if str(t).strip()]
+    if not lignes:
+        raise ValueError("aucun avis exploitable dans le fichier")
+    sortie = df.loc[df[colonne].fillna("").astype(str).str.strip() != ""].copy()
+    sortie["prediction"] = [l["label"] for l in lignes]
+    sortie["confiance"] = [round(l["score"], 3) for l in lignes]
+    sortie["verdict"] = [l["verdict"] for l in lignes]
+    return sortie
+
+
+def resumer(df: pd.DataFrame) -> dict[str, int | float]:
+    """Les trois chiffres que l'équipe relation client regarde en premier."""
+    negatifs = int((df["prediction"] == "negative").sum())
+    a_verifier = int((df["verdict"] == "à vérifier").sum())
+    total = len(df)
+    return {
+        "total": total,
+        "negatifs": negatifs,
+        "part_negatifs": round(100 * negatifs / total, 1) if total else 0.0,
+        "a_verifier": a_verifier,
+        "confiance_moyenne": round(float(df["confiance"].mean()), 3) if total else 0.0,
+    }
+
+
+# --- Fonctions utilitaires compatibles et aliases pour le traitement par lot ---
 
 def classer_avis(texte: str, seuil: float = DEFAULT_SEUIL_INCERTITUDE) -> dict[str, Any]:
-    """Retourne la prédiction du modèle et son statut métier.
-
-    Un score inférieur au seuil déclenche le verdict « à vérifier » au lieu d'une
-    décision automatique tranchée.
-    """
+    """Classification avec seuil configurable."""
     if not isinstance(texte, str) or not texte.strip():
         raise ValueError("Le texte ne peut pas être vide.")
-
-    from src.predict import predict
-
-    resultat = predict(texte)
+    predicteur = charger_predicteur()
+    resultat = predicteur(texte)
     score = float(resultat["score"])
     label = str(resultat["label"])
     verdict = "à vérifier" if score < float(seuil) else label
-
     return {
         "label": label,
         "score": score,
         "verdict": verdict,
         "seuil": float(seuil),
         "automatique": score >= float(seuil),
+        "incertain": score < float(seuil),
     }
 
 
 def traiter_fichier_csv(fichier: Any, seuil: float = DEFAULT_SEUIL_INCERTITUDE) -> pd.DataFrame:
-    """Lit un CSV et ajoute les colonnes de prédiction, confiance et statut."""
+    """Lit un CSV ou DataFrame et ajoute les métadonnées de prédiction."""
     if isinstance(fichier, pd.DataFrame):
         dataframe = fichier.copy()
     elif hasattr(fichier, "read"):
@@ -52,27 +111,25 @@ def traiter_fichier_csv(fichier: Any, seuil: float = DEFAULT_SEUIL_INCERTITUDE) 
 
     lignes = []
     for avis in dataframe["review"].fillna(""):
-        prediction = classer_avis(str(avis), seuil=seuil)
-        lignes.append(prediction)
+        pred = classer_avis(str(avis), seuil=seuil)
+        lignes.append(pred)
 
-    dataframe = dataframe.copy()
-    dataframe["label"] = [ligne["label"] for ligne in lignes]
-    dataframe["score"] = [ligne["score"] for ligne in lignes]
-    dataframe["verdict"] = [ligne["verdict"] for ligne in lignes]
-    dataframe["automatique"] = [ligne["automatique"] for ligne in lignes]
-    dataframe = dataframe.sort_values("score", ascending=False, kind="mergesort").reset_index(drop=True)
-    return dataframe
+    df_res = dataframe.copy()
+    df_res["label"] = [l["label"] for l in lignes]
+    df_res["score"] = [l["score"] for l in lignes]
+    df_res["verdict"] = [l["verdict"] for l in lignes]
+    df_res["automatique"] = [l["automatique"] for l in lignes]
+    return df_res.sort_values("score", ascending=False, kind="mergesort").reset_index(drop=True)
 
 
 def resumer_lot(dataframe: pd.DataFrame) -> dict[str, int | float]:
-    """Calcule le résumé chiffré d'un lot de commentaires."""
+    """Résumé statistique d'un lot d'avis."""
     if dataframe.empty:
         return {"total": 0, "positifs": 0, "negatifs": 0, "a_verifier": 0, "taux_a_verifier": 0.0}
-
     total = int(len(dataframe))
-    positifs = int((dataframe["label"] == "positive").sum())
-    negatifs = int((dataframe["label"] == "negative").sum())
     a_verifier = int((dataframe["verdict"] == "à vérifier").sum())
+    positifs = int((dataframe["verdict"] == "positive").sum())
+    negatifs = int((dataframe["verdict"] == "negative").sum())
     return {
         "total": total,
         "positifs": positifs,
@@ -83,7 +140,7 @@ def resumer_lot(dataframe: pd.DataFrame) -> dict[str, int | float]:
 
 
 def exporter_csv(dataframe: pd.DataFrame) -> str:
-    """Convertit un DataFrame traité au format CSV exploitable."""
+    """Export au format CSV textuel."""
     return dataframe.to_csv(index=False)
 
 
@@ -95,6 +152,10 @@ exporter_resultats = exporter_csv
 __all__ = [
     "DEFAULT_SEUIL_INCERTITUDE",
     "SEUIL_INCERTITUDE",
+    "charger_predicteur",
+    "classer",
+    "predire_lot",
+    "resumer",
     "classer_avis",
     "analyser_avis",
     "traiter_fichier_csv",

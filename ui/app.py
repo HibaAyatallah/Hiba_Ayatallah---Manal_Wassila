@@ -1,76 +1,94 @@
-"""Interface Streamlit du module de sentiment."""
-from __future__ import annotations
+"""Interface de démonstration du classifieur de sentiment.
 
+Usage : streamlit run ui/app.py
+Prérequis : models/sentiment.joblib, produit par python src/train.py (TP2).
+"""
+from pathlib import Path
+
+import pandas as pd
 import streamlit as st
 
-from ui.helpers import DEFAULT_SEUIL_INCERTITUDE, classer_avis, exporter_csv, resumer_lot, traiter_fichier_csv
+from helpers import charger_predicteur, classer, predire_lot, resumer
 
-st.set_page_config(page_title="Analyse de sentiment", page_icon="💬")
+RACINE = Path(__file__).resolve().parents[1]
+
+st.set_page_config(page_title="Analyse de sentiment", page_icon="💬", layout="wide")
 st.title("Analyse de sentiment des avis clients")
-st.caption("Modèle TF-IDF + Régression logistique, avec seuil d'incertitude métier.")
+st.caption("Modèle entraîné en TP2 · interface de démonstration · fil rouge du cours")
 
 
 @st.cache_resource
-def charger_modele():
-    """Charge le modèle sérialisé une seule fois par processus Streamlit."""
-    from src.predict import charger_modele as chargeur
-
-    try:
-        return chargeur()
-    except FileNotFoundError:
-        return None
+def predicteur():
+    """Chargé une seule fois, pas à chaque interaction."""
+    return charger_predicteur()
 
 
-modele = charger_modele()
-if modele is None:
-    st.error("Modèle introuvable. Lancez d'abord : python src/train.py")
+try:
+    predire = predicteur()
+except FileNotFoundError as erreur:
+    st.error(str(erreur))
+    st.info("Dans un terminal, à la racine du dépôt : `python src/train.py --allocine`")
     st.stop()
 
-onglet_simple, onglet_lot = st.tabs(["Un avis", "Un fichier CSV"])
+onglet_avis, onglet_lot, onglet_aide = st.tabs(["Un avis", "Un fichier CSV", "Comment ça marche"])
 
-with onglet_simple:
-    texte = st.text_area("Avis à analyser", "Service impeccable et livraison très rapide !", height=120)
-    seuil = st.slider("Seuil d'incertitude", min_value=0.50, max_value=0.90, value=DEFAULT_SEUIL_INCERTITUDE, step=0.01)
-
+with onglet_avis:
+    texte = st.text_area("Avis à analyser", "Livraison rapide, produit conforme.", height=130)
     if st.button("Analyser", type="primary"):
         if not texte.strip():
-            st.warning("Saisissez un avis avant de lancer l'analyse.")
+            st.warning("Saisissez un avis.")
         else:
-            resultat = classer_avis(texte, seuil=seuil)
-            score = resultat["score"]
-            label = resultat["label"]
-            verdict = resultat["verdict"]
-
-            if verdict == "à vérifier":
-                st.warning(f"À vérifier : le modèle estime un {label} à {score:.0%}, sous le seuil de {seuil:.0%}.")
-            elif label == "positive":
-                st.success(f"Avis positif · confiance {score:.0%}")
-            else:
-                st.error(f"Avis négatif · confiance {score:.0%}")
-
-            st.progress(float(score))
-            st.caption(f"Seuil retenu : {seuil:.0%} | verdict final : {verdict}")
+            r = classer(texte, predire)
+            colonne_verdict, colonne_score = st.columns([2, 1])
+            with colonne_verdict:
+                if r["incertain"]:
+                    st.warning(f"À vérifier par un agent (penche vers « {r['label']} »)")
+                elif r["label"] == "negative":
+                    st.error("Avis négatif : à traiter en priorité")
+                else:
+                    st.success("Avis positif")
+            with colonne_score:
+                st.metric("Confiance", f"{r['score']:.0%}")
+            st.progress(float(r["score"]))
 
 with onglet_lot:
-    fichier = st.file_uploader("Fichier CSV", type=["csv"]) 
-    seuil_lot = st.slider("Seuil d'incertitude du lot", min_value=0.50, max_value=0.90, value=DEFAULT_SEUIL_INCERTITUDE, step=0.01, key="seuil_lot")
-
+    st.write("Fichier CSV contenant une colonne `review`. Exemple fourni : `data/sample_reviews.csv`.")
+    fichier = st.file_uploader("Choisir un fichier", type="csv")
     if fichier is not None:
         try:
-            dataframe = traiter_fichier_csv(fichier, seuil=seuil_lot)
-        except ValueError as exc:
-            st.error(str(exc))
+            df = predire_lot(pd.read_csv(fichier), predire)
+        except (KeyError, ValueError) as erreur:
+            st.error(str(erreur))
         else:
-            resume = resumer_lot(dataframe)
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Positifs", resume["positifs"])
-            col2.metric("Négatifs", resume["negatifs"])
-            col3.metric("À vérifier", resume["a_verifier"])
-
-            st.dataframe(dataframe[["review", "label", "score", "verdict"]].sort_values("score", ascending=False), use_container_width=True)
+            r = resumer(df)
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Avis analysés", r["total"])
+            c2.metric("Négatifs détectés", f"{r['negatifs']} ({r['part_negatifs']} %)")
+            c3.metric("À vérifier", r["a_verifier"])
+            st.bar_chart(df["prediction"].value_counts())
+            st.dataframe(
+                df.sort_values(["prediction", "confiance"], ascending=[True, False]),
+                use_container_width=True,
+            )
             st.download_button(
                 "Télécharger les résultats",
-                exporter_csv(dataframe).encode("utf-8"),
-                "resultats_sentiment.csv",
+                df.to_csv(index=False).encode("utf-8"),
+                "resultats.csv",
                 "text/csv",
             )
+
+with onglet_aide:
+    st.markdown(
+        """
+**Ce que fait cette interface.** Elle charge le modèle produit au TP2 et appelle sa fonction
+`predict()`, la même que celle qu'utilisera l'API. Aucune logique de prédiction n'est dupliquée ici.
+
+**Le seuil d'incertitude.** En dessous de 60 % de confiance, la prédiction est affichée comme
+« à vérifier » plutôt que tranchée. Un modèle qui hésite doit le dire : c'est ce qui permet à un
+agent de reprendre la main, comme prévu dans la fiche de cadrage du cas 3.
+
+**Ce que l'interface n'est pas.** Une démonstration, pas l'application. Elle sert à montrer le
+modèle, à récolter des retours et à faire apparaître les cas où il se trompe. L'API, elle, sera
+appelée par d'autres programmes.
+        """
+    )
