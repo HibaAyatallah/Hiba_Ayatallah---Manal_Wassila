@@ -1,75 +1,107 @@
 # sentiment-app : dépôt du binôme
 
-Application fil rouge du cours *Développement et déploiement d'applications intelligentes*.
-Ce dépôt grandit chaque semaine ; la semaine 1 met en place le cadrage et l'environnement. Rien n'est jeté.
+Application fil rouge du cours *Développement et déploiement d'applications intelligentes*.  
+Ce dépôt grandit chaque semaine :
+- **Semaine 1 (TP1) :** Cadrage métier, mise en place de l'environnement reproductible, initialisation Git et intégration continue.
+- **Semaine 2 (TP2) :** Entraînement, évaluation, analyse des erreurs et sérialisation du modèle de sentiment (TF-IDF + Régression Logistique).
+
+---
 
 ## Démarrage rapide
 
+### 1. Activer l'environnement virtuel
 ```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows PowerShell : .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+# Linux, macOS, Git Bash :
+source .venv/bin/activate
+
+# Windows PowerShell :
+.\.venv\Scripts\Activate.ps1
 ```
 
-Puis vérifiez :
+*(Si nécessaire, installer les dépendances : `pip install -r requirements.txt`)*
 
+### 2. Vérifier l'état et les tests
 ```bash
-python scripts/check_setup.py    # diagnostic lisible : versions, dossiers, Git, fiches
-pytest -q                        # les mêmes vérifications, sous forme de tests
+python scripts/check_setup.py    # diagnostic de l'environnement, des versions et de Git
+pytest -q                        # 42 passed attendus en Semaine 2
 ```
 
-**Au premier lancement, `pytest` affiche `3 failed, 31 passed, 4 skipped` : c'est normal.** Les trois échecs sont les fiches de cadrage encore vides, les quatre tests ignorés attendent que le dépôt Git existe. En fin de TP, la même commande affiche `38 passed`.
+---
 
-Les scripts `scripts/setup.sh` (Linux, macOS, Git Bash) et `scripts/setup.ps1` (Windows) font l'installation et le diagnostic en une commande.
+## Commandes de la Semaine 2 (Modèle & Évaluation)
 
-## Par où commencer
+Toutes les commandes se lancent depuis la racine du dépôt :
 
-| Fichier | Quand le lire |
+```bash
+# 1. Générer le jeu de données de démonstration (290 avis équilibrés, dont 100 mitigés)
+python src/make_demo.py
+
+# 2. Entraîner le modèle de sentiment
+python src/train.py              # entraînement sur le jeu démo (F1 macro: 0.879)
+python src/train.py --allocine   # entraînement sur 20 000 avis Allociné (F1 macro: 0.920)
+
+# 3. Évaluer les performances et afficher la matrice de confusion
+python src/evaluate.py
+
+# 4. Tester une prédiction unitaire
+python src/predict.py "Service impeccable et livraison très rapide !"
+```
+
+> **Principe MLOps :** Le modèle sérialisé `models/sentiment.joblib` et les données `data/demo_reviews.csv` sont ignorés par Git car régénérables. Seul le fichier de mesure [models/metrics.json](file:///c:/Users/manal/OneDrive/Desktop/Dev-AI/sentiment-app/models/metrics.json) est versionné.
+
+---
+
+## Par où commencer & Documentation
+
+| Fichier | Description |
 | --- | --- |
-| `MARCHE-A-SUIVRE.md` | Pendant la séance : huit étapes, huit contrôles, les résultats attendus |
-| `TP1-ENONCE.md` | L'énoncé du TP : objectifs, livrables, grille de notation |
-| `TESTS.md` | La démarche de test en détail, et les trois états de référence |
-| `AIDE-GIT.md` | Les commandes Git du TP et la résolution d'un conflit |
-| `DEPANNAGE.md` | Quand quelque chose échoue |
-| `docs/cadrage/GRILLE-DE-DECISION.md` | Pendant la partie A, pour remplir les fiches |
-| `exemples/README.md` | Après le TP, pour voir à quoi ressembleront les semaines 2 et 5 |
+| `MARCHE-A-SUIVRE-TP2.md` | Guide pas à pas de la semaine 2 et contrôles C1 à C5 |
+| `TP2-ENONCE.md` | Énoncé officiel du TP2 : objectifs et démarches |
+| `docs/semaine2.md` | Analyse qualitative des erreurs du modèle sur les avis mitigés |
+| `Resume/RESUME_TP2.md` | Compte rendu complet et structuré du TP2 (8 sections) |
+| `MARCHE-A-SUIVRE.md` / `TP1-ENONCE.md` | Consignes et cadrage de la semaine 1 |
+| `docs/cadrage/` | Fiches de cadrage des cas métiers (pharmacie, règlement, avis négatifs) |
 
-## Raccourcis
+---
 
-Sous Linux, macOS et Git Bash, un `Makefile` évite de retaper les commandes :
-
-```bash
-make setup          # venv, dépendances, diagnostic
-make check          # diagnostic seul
-make test           # les 38 tests
-make test-cadrage   # les 12 tests des fiches
-make verif URL=https://github.com/<organisation>/sentiment-app.git
-make exemple-ml     # entraîne le modèle d'exemple (facultatif)
-make help           # la liste complète
-```
-
-## Structure
+## Structure du dépôt (Semaine 2)
 
 ```text
 sentiment-app/
-├── README.md, MARCHE-A-SUIVRE.md, TP1-ENONCE.md, TESTS.md, AIDE-GIT.md, DEPANNAGE.md
-├── Makefile              # raccourcis (optionnel)
-├── requirements.txt      # dépendances du semestre, versions figées
-├── .gitignore, .env.example, .editorconfig, pytest.ini
-├── .vscode/              # interpréteur et tests préconfigurés
-├── data/                 # jeux de données (DVC à partir de la semaine 7)
-├── models/               # modèles entraînés (jamais dans Git)
-├── app/                  # API FastAPI (semaine 3)
-├── ui/                   # interface Streamlit (semaine 5)
-├── tests/                # pytest : 23 + 12 + 3 = 38 tests en semaine 1
-├── scripts/              # setup, diagnostic, création de fiche, init du dépôt, clone de vérification
-├── notebooks/            # variante Colab du TP1
-└── docs/cadrage/         # fiches de cadrage, exemple corrigé, grille, banque de cas
+├── README.md, TP1-ENONCE.md, TP2-ENONCE.md, MARCHE-A-SUIVRE*.md, TESTS.md
+├── Makefile, requirements.txt, requirements.lock, .gitignore, pytest.ini
+├── .github/workflows/ci.yml       # Intégration continue (GitHub Actions)
+├── docs/
+│   ├── cadrage/                   # cas1-pharmacie.md, cas2-reglement.md, cas3-avis-negatifs.md
+│   └── semaine2.md                # Analyse des erreurs (sac de mots, avis mitigés)
+├── Resume/
+│   ├── RESUME_TP1.pdf             # Synthèse TP1
+│   └── RESUME_TP2.md             # Compte rendu global TP1 & TP2
+├── src/
+│   ├── make_demo.py               # Générateur du jeu de données synthétique
+│   ├── train.py                   # Entraînement Pipeline (TfidfVectorizer + LogisticRegression)
+│   ├── evaluate.py                # Rapport de classification et matrice de confusion
+│   └── predict.py                 # Fonction d'inférence autonome
+├── models/
+│   ├── .gitkeep
+│   ├── metrics.json               # Métriques validées et versionnées dans Git
+│   └── sentiment.joblib           # Modèle binaire (local, ignoré par Git)
+├── tests/                         # 42 tests unitaires automatisés
+│   ├── test_environment.py       # 23 tests d'environnement et de structure
+│   ├── test_cadrage.py           # 12 tests des fiches de cadrage
+│   ├── test_git_history.py       # 3 tests de l'historique et des commits
+│   └── test_model.py             # 4 tests sur le modèle et metrics.json
+├── scripts/                       # check_setup, setup, init_depot, verif_clone
+└── data/
+    ├── sample_reviews.csv         # Échantillon d'avis
+    └── demo_reviews.csv          # Données de démo (régénérables par make_demo.py)
 ```
+
+---
 
 ## Membres du binôme
 
-| Rôle | Nom | Identifiant GitHub | Travail de la semaine 1 |
-| --- | --- | --- | --- |
-| Membre A | Hiba Ayatallah | [@HibaAyatallah](https://github.com/HibaAyatallah) | Création du dépôt GitHub et premier push du kit; cadrage en binôme; commit du README. |
-| Membre B | Manal Wassila | [@manalwassila](https://github.com/manalwassila) | Clonage du dépôt et vérification de l'environnement; cadrage en binôme; commit du README. |
+| Rôle | Nom | Identifiant GitHub | Travaux réalisés |
+| :--- | :--- | :--- | :--- |
+| **Membre A** | Hiba Ayatallah | [@HibaAyatallah](https://github.com/HibaAyatallah) | Semaine 1 : création du dépôt, initialisation Git, cadrage.<br>Semaine 2 : cadrage métier, revue des métriques et documentation GitHub. |
+| **Membre B** | Manal Wassila | [@manalwassila](https://github.com/manalwassila) | Semaine 1 : configuration de l'environnement, validation des tests.<br>Semaine 2 : pipeline de modélisation, entraînement Allociné, analyse des erreurs, passage des 42 tests. |
