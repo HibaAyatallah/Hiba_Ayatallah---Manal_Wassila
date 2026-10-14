@@ -75,11 +75,12 @@ def resumer(df: pd.DataFrame) -> dict[str, int | float]:
 
 # --- Fonctions utilitaires compatibles et aliases pour le traitement par lot ---
 
-def classer_avis(texte: str, seuil: float = DEFAULT_SEUIL_INCERTITUDE) -> dict[str, Any]:
+def classer_avis(texte: str, seuil: float = DEFAULT_SEUIL_INCERTITUDE, predicteur=None) -> dict[str, Any]:
     """Classification avec seuil configurable."""
     if not isinstance(texte, str) or not texte.strip():
         raise ValueError("Le texte ne peut pas être vide.")
-    predicteur = charger_predicteur()
+    if predicteur is None:
+        predicteur = charger_predicteur()
     resultat = predicteur(texte)
     score = float(resultat["score"])
     label = str(resultat["label"])
@@ -94,7 +95,7 @@ def classer_avis(texte: str, seuil: float = DEFAULT_SEUIL_INCERTITUDE) -> dict[s
     }
 
 
-def traiter_fichier_csv(fichier: Any, seuil: float = DEFAULT_SEUIL_INCERTITUDE) -> pd.DataFrame:
+def traiter_fichier_csv(fichier: Any, seuil: float = DEFAULT_SEUIL_INCERTITUDE, predicteur=None) -> pd.DataFrame:
     """Lit un CSV ou DataFrame et ajoute les métadonnées de prédiction."""
     if isinstance(fichier, pd.DataFrame):
         dataframe = fichier.copy()
@@ -111,7 +112,7 @@ def traiter_fichier_csv(fichier: Any, seuil: float = DEFAULT_SEUIL_INCERTITUDE) 
 
     lignes = []
     for avis in dataframe["review"].fillna(""):
-        pred = classer_avis(str(avis), seuil=seuil)
+        pred = classer_avis(str(avis), seuil=seuil, predicteur=predicteur)
         lignes.append(pred)
 
     df_res = dataframe.copy()

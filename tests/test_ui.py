@@ -56,22 +56,22 @@ def test_lot_et_resume(predire):
         predire_lot(pd.DataFrame({"texte": ["a"]}), predire)
 
 
-def test_analyse_avis_positive():
+def test_analyse_avis_positive(predire):
     from helpers import classer_avis
-    resultat = classer_avis("Service impeccable et livraison très rapide !")
+    resultat = classer_avis("Service impeccable et livraison très rapide !", predicteur=predire)
     assert resultat["label"] == "positive"
     assert resultat["score"] >= 0.5
     assert resultat["verdict"] == "positive"
 
 
-def test_analyse_avis_avec_seuil_incertain():
+def test_analyse_avis_avec_seuil_incertain(predire):
     from helpers import classer_avis
-    resultat = classer_avis("Produit correct mais pas exceptionnel", seuil=0.999)
+    resultat = classer_avis("Produit correct mais pas exceptionnel", seuil=0.999, predicteur=predire)
     assert resultat["verdict"] == "à vérifier"
     assert 0.0 <= resultat["score"] <= 1.0
 
 
-def test_traitement_lot_et_resume():
+def test_traitement_lot_et_resume(predire):
     from helpers import resumer_lot, traiter_fichier_csv
     dataframe = pd.DataFrame({
         "review": [
@@ -80,7 +80,7 @@ def test_traitement_lot_et_resume():
             "Très bien, mais pas parfait",
         ]
     })
-    traite = traiter_fichier_csv(dataframe, seuil=0.60)
+    traite = traiter_fichier_csv(dataframe, seuil=0.60, predicteur=predire)
     resume = resumer_lot(traite)
 
     assert set(traite.columns) >= {"review", "label", "score", "verdict", "automatique"}
