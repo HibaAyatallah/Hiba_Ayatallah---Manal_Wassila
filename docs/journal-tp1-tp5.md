@@ -168,7 +168,11 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+PS C:\Users\manal\OneDrive\Desktop\Dev-AI\sentiment-app> .venv\Scripts\Activate.ps1     
+(.venv) PS C:\Users\manal\OneDrive\Desktop\Dev-AI\sentiment-app> python -m pytest tests/test_cadrage.py -q                
+>> python -m pytest -q                                                                                                    
+............                                                                                                       [100%]
+12 passed in 0.19s
 ```
 
 - [x] Conforme
