@@ -1,5 +1,14 @@
 # sentiment-app : dépôt du binôme
 
+<div align="center">
+
+| **Hiba Ayatallah** | **Manal Wassila** |
+| :---: | :---: |
+| <img src="docs/captures/hiba_ayatallah.jpg" width="200" alt="Hiba Ayatallah"> | <img src="docs/captures/manal_wassila.png" width="200" alt="Manal Wassila"> |
+| [@HibaAyatallah](https://github.com/HibaAyatallah) | [@manalwassila](https://github.com/manalwassila) |
+
+</div>
+
 Application fil rouge du module *Développement et déploiement d'applications intelligentes* (Pr. A. Larhlimi).  
 Ce dépôt retrace la chaîne d'ingénierie complète d'une application de traitement automatique du langage naturel (NLP) pour la relation client, du cadrage métier jusqu'à la qualification logicielle industrielle et l'exposition d'une API de production :
 
