@@ -1,10 +1,12 @@
 # sentiment-app : dépôt du binôme
 
-Application fil rouge du cours *Développement et déploiement d'applications intelligentes*.  
-Ce dépôt retrace l'intégralité de la démarche, de l'analyse du problème métier jusqu'au déploiement de l'interface utilisateur :
-- **Semaine 1 (TP1) :** Cadrage métier, environnement virtuel reproductible, initialisation Git et pipeline d'intégration continue (CI).
-- **Semaine 2 (TP2) :** Entraînement sur données massives (Allociné, 20 000 avis), évaluation, analyse qualitative des erreurs et sérialisation du modèle (TF-IDF + Régression Logistique).
-- **Semaine 3 (TP3) :** Interface interactive de démonstration **Streamlit**, traitement par lots CSV, séparation stricte de la logique et de l'affichage, et arbitrage métier du seuil d'incertitude.
+Application fil rouge du module *Développement et déploiement d'applications intelligentes* (Pr. A. Larhlimi).  
+Ce dépôt retrace la chaîne d'ingénierie complète d'une application de traitement automatique du langage naturel (NLP) pour la relation client, du cadrage métier jusqu'à la qualification logicielle industrielle et l'exposition d'une API de production :
+
+- **Semaine 1 (TP1) — Cadrage & Environnement :** Cadrage métier multicritère, environnement virtuel Python 3.11 reproductible, structure canonique du dépôt, fiches de décision et pipeline d'Intégration Continue (38 tests).
+- **Semaine 2 (TP2) — Modèle de sentiment & MLOps :** Pipeline scikit-learn (TF-IDF + Régression logistique), entraînement synthétique (`demo_reviews.csv`) et massif (`allocine`), analyse qualitative des erreurs, versionnage sélectif (`models/metrics.json` versionné, modèle binaire ignoré par Git) (42 tests).
+- **Semaine 3 (TP3) — API REST FastAPI :** Exposition du modèle derrière un microservice HTTP asynchrone (`/health`, `/predict`), validation Pydantic v2, chargement unique en mémoire au démarrage (`lifespan`) et architecture *fail-fast* (48 tests).
+- **Semaine 4 (TP4) — Tests approfondis & Garde-fous :** Tests aux limites paramétrés et tests de propriétés (`hypothesis`), arbitrage du seuil d'abstention à 0.60 avec verdict `INDETERMINE`, constitution d'un jeu d'or de 20 avis annotés, tests d'intégration réels et masquage des erreurs 500, couverture à 100 %, typage strict `mypy`, linters `ruff` et crochets `pre-commit` (83 tests passés, 2 xfailed).
 
 ---
 
@@ -12,130 +14,173 @@ Ce dépôt retrace l'intégralité de la démarche, de l'analyse du problème m�
 
 ### 1. Activer l'environnement virtuel
 ```bash
-# Linux, macOS, Git Bash :
-source .venv/bin/activate
-
 # Windows PowerShell :
 .\.venv\Scripts\Activate.ps1
+
+# Linux / macOS / Git Bash :
+source .venv/bin/activate
 ```
 
-*(Si nécessaire, installer les dépendances : `pip install -r requirements.txt`)*
-
-### 2. Lancer la suite de tests automatisés
+*(Si nécessaire, installer les dépendances applicatives et de développement :)*
 ```bash
-python scripts/check_setup.py    # diagnostic de l'environnement, des versions et de Git
-pytest -q                        # 45 passed attendus en Semaine 3 (42 du modèle + 3 d'interface)
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-### 3. Lancer l'interface Streamlit
+### 2. Entraîner le modèle de démonstration
 ```bash
-streamlit run ui/app.py
-# ou via Python :
-python -m streamlit run ui/app.py
+python src/train.py
 ```
-L'interface s'ouvre automatiquement dans votre navigateur à l'adresse [http://localhost:8501](http://localhost:8501).
+*Le modèle est généré dans `models/sentiment.joblib` (F1 macro = 0.879) et les métriques dans `models/metrics.json`.*
+
+### 3. Lancer l'API FastAPI
+```bash
+uvicorn api.main:app --reload
+```
+Le terminal confirme : `Modèle chargé avec succès : tfidf-logreg (TP2, models/sentiment.joblib)`.  
+La documentation interactive Swagger est immédiatement consultable dans votre navigateur sur **[http://localhost:8000/docs](http://localhost:8000/docs)**.
 
 ---
 
-## Utilisation de l'application (Semaine 3)
+## Validation et Qualification logicielle (TP4)
 
-L'application web Streamlit propose trois onglets conçus pour l'équipe relation client :
+Toutes les vérifications de qualité et de robustesse se lancent en une seule commande depuis la racine du dépôt :
 
-1. **Onglet « Un avis » (Contrôle S2) :**
-   - Analyse instantanée d'un texte libre avec jauge de score.
-   - Trois verdicts visuels : **Avis positif** (vert), **Avis négatif prioritaire** (rouge), ou **À vérifier par un agent** (orange) si la confiance est inférieure au seuil de 60 % (`SEUIL_INCERTITUDE = 0.60`).
-2. **Onglet « Un fichier CSV » (Contrôle S3) :**
-   - Téléversement d'un lot d'avis (ex. `data/sample_reviews.csv` ou `data/demo_reviews.csv`).
-   - Affichage des métriques produit (volume total, part de négatifs, cas à vérifier).
-   - Graphique de répartition et tableau dynamique trié avec les avis négatifs prioritaires en tête.
-   - Bouton d'export pour télécharger le CSV enrichi avec les verdicts et scores.
-3. **Onglet « Comment ça marche » :**
-   - Explications méthodologiques, règles MLOps et guide d'interprétation pour les non-techniciens.
+```bash
+# 1. Exécuter l'intégralité de la suite de tests automatisés (83 passés, 2 xfailed)
+pytest -q
+
+# 2. Mesurer la couverture de code sur l'API (seuil minimal exigé : 95 % ; obtenu : 100 %)
+pytest -q --cov=api --cov-report=term-missing --cov-fail-under=95
+
+# 3. Contrôler le typage statique du contrat d'interface
+mypy api
+
+# 4. Vérifier la conformité stylistique et l'absence d'erreurs avec le linter ruff
+ruff check .
+
+# 5. Tester le crochet de pré-commit
+pre-commit run --all-files
+```
 
 ---
 
-## Commandes utiles du projet
+## Les Endpoints de l'API (Semaines 3 & 4)
 
-Toutes les commandes se lancent depuis la racine du dépôt :
+L'API REST expose trois routes principales documentées via OpenAPI :
+
+| Méthode & Route | Description & Contrat | Codes de statut HTTP |
+| :--- | :--- | :---: |
+| **`GET /`** | Accueil et pointage vers la documentation. | `200 OK` |
+| **`GET /health`** | Sonde de santé opérationnelle (*liveness probe*). Valide que le modèle `tfidf-logreg` est instancié en mémoire. | `200 OK`<br>`503 Service Unavailable` |
+| **`POST /predict`** | Classification d'un texte (`1` à `2000` caractères). Renvoie `label` (`POSITIVE`, `NEGATIVE`, `INDETERMINE`), `score` et aperçu textuel. | `200 OK`<br>`422 Unprocessable Entity`<br>`500 Internal Error` |
+
+### Exemples d'appels en ligne de commande (`httpx`) :
 
 ```bash
-# --- TP3 : Interface Streamlit & Tests ---
-streamlit run ui/app.py               # Lancer l'interface web
-pytest tests/test_ui.py -v           # Tester les fonctions pures de ui/helpers.py (3 passed)
+# Vérifier la santé du service (T15)
+python -c "import httpx; print(httpx.get('http://127.0.0.1:8000/health').json())"
 
-# --- TP2 : Données & Entraînement ---
-python src/make_demo.py              # Générer le jeu de test de démo (290 avis)
-python src/train.py                  # Entraîner sur le jeu démo (F1: 0.879)
-python src/train.py --allocine       # Entraîner sur le jeu complet Allociné (F1: 0.920)
-python src/evaluate.py               # Rapport de classification et matrice de confusion
-python src/predict.py "Votre texte"  # Inférence unitaire en ligne de commande
+# Prédire un avis positif (T16)
+python -c "import httpx; r = httpx.post('http://127.0.0.1:8000/predict', json={'text': 'Livraison rapide, produit conforme, très satisfait'}); print(r.status_code, r.json())"
 
-# --- TP1 : Diagnostic & Intégration continue ---
-python scripts/check_setup.py        # Vérification complète de la configuration
-pytest -q                            # Lancer l'intégralité des 48 tests
+# Prédire un avis négatif (T17)
+python -c "import httpx; r = httpx.post('http://127.0.0.1:8000/predict', json={'text': 'Produit cassé et service injoignable, à fuir'}); print(r.status_code, r.json())"
+
+# Observer l'abstention sur un texte hors vocabulaire (T24)
+python -c "import httpx; r = httpx.post('http://127.0.0.1:8000/predict', json={'text': 'xqzvb wlkptr grombu'}); print(r.status_code, r.json())"
+# Réponse : 200 {'label': 'INDETERMINE', 'score': 0.5162, ...}
 ```
+
+---
+
+## Synthèse des Garde-fous intégrés au TP4
+
+1. **Validation stricte aux limites (`tests/test_limites.py`) :**
+   - Contrôle paramétré sur 8 cas frontières (vide, blancs seuls, 1 car., 2000 car., 2001 car., champ manquant, type non-chaîne, corps non-JSON).
+   - Tests de propriétés probabilistes avec **Hypothesis** (150 tirages valides et 100 tirages de blancs purs).
+   - Validation via `@field_validator("text")` dans `api/schemas.py` éliminant le bug du caractère Unicode `\x85` (Next Line).
+2. **Abstention probabiliste (`api/model.py`) :**
+   - Seuil de confiance fixé à `SEUIL_ABSTENTION = 0.60` sur la base de la courbe empirique (`src/courbe_seuil.py`).
+   - Réduction de 71.4 % des erreurs du modèle au prix de seulement 27.6 % d'avis délégués à une revue humaine.
+3. **Le Jeu d'or (`data/jeu_or.csv` & `tests/test_jeu_or.py`) :**
+   - 20 avis de test conçus manuellement (dont 6 cas complexes : négation, ironie, avis mitigé, critique cinéma).
+   - 2 erreurs structurelles documentées et protégées par `xfail(strict=True)`.
+4. **Résilience et Sécurité de l'API (`tests/test_integration.py`) :**
+   - Interception de toute panne imprévue du modèle pour répondre un HTTP 500 générique sans fuite de message technique (`from None`).
+   - Refus strict de démarrage si le modèle binaire est absent ou si ses classes ne correspondent pas au contrat.
+   - Couverture de test complète : **100 % sur `api/`**.
 
 ---
 
 ## Documentation et Livrables
 
-| Document | Contenu |
+| Document | Contenu & Objectif |
 | :--- | :--- |
-| **`Resume/RESUME_GLOBAL.md`** | **Compte rendu global complet des 3 TP (8 sections notées sur 20)** |
-| `Resume/RESUME_TP2.md` | Synthèse détaillée spécifique au TP2 (modèle & erreurs) |
-| `Resume/RESUME_TP1.pdf` | Synthèse du cadrage et de l'environnement TP1 |
-| `docs/semaine3.md` | Justification du seuil d'incertitude (0.60) et arbitrage métier |
+| **`Resume/RESUME_TP4.md`** | **Compte rendu complet et approfondi du TP4 (Tests aux limites, Hypothesis, Seuil d'abstention, Jeu d'or, Couverture 100 % et Linters)** |
+| `Resume/RESUME_TP2.md` | Synthèse détaillée du TP2 (Modélisation, pipeline scikit-learn et analyse qualitative des erreurs) |
+| `Resume/RESUME_GLOBAL.md` | Synthèse globale des étapes initiales du projet |
+| `docs/semaine4.md` | Réponses argumentées et mesures d'exécution de la semaine 4 (Couverture, courbe de seuil, bilan du jeu d'or et audit statique) |
+| `docs/semaine3.md` | Analyse de la conception d'API (Fail-Fast au démarrage et défense en profondeur Pydantic vs modèle) |
 | `docs/semaine2.md` | Analyse qualitative des erreurs du sac de mots sur les avis mitigés |
-| `docs/cadrage/` | Fiches de cadrage des cas d'usage (pharmacie, règlement, avis négatifs) |
-| `MARCHE-A-SUIVRE-TP3.md` / `TP3-ENONCE.md` | Guide et consignes officielles de la semaine 3 |
+| `docs/journal-tp1-tp5.md` | Journal de bord officiel du binôme avec les résultats réels des contrôles T0 à T27 |
+| `docs/cadrage/` | Fiches de cadrage métier formalisées lors du TP1 (pharmacie, règlement, avis négatifs) |
 
 ---
 
-## Structure finale du dépôt
+## Structure du Dépôt
 
 ```text
 sentiment-app/
-├── README.md, TP1-ENONCE.md, TP2-ENONCE.md, TP3-ENONCE.md, TESTS.md
-├── requirements.txt, requirements.lock, .gitignore, pytest.ini, Makefile
-├── .github/workflows/ci.yml       # Intégration continue GitHub Actions
-├── ui/                            # Interface utilisateur (TP3)
-│   ├── app.py                     # Script d'affichage et composants Streamlit
-│   └── helpers.py                 # Fonctions pures testables sans serveur web
-├── src/                           # Pipeline ML (TP2)
-│   ├── make_demo.py               # Générateur du jeu de démo
-│   ├── train.py                   # Entraînement et sérialisation
-│   ├── evaluate.py                # Rapport de classification et matrice de confusion
-│   └── predict.py                 # Logique de prédiction
-├── tests/                         # 48 tests automatisés
-│   ├── test_environment.py       # 23 tests d'environnement et de structure (TP1)
-│   ├── test_cadrage.py           # 12 tests des fiches de cadrage (TP1)
-│   ├── test_git_history.py       # 3 tests de l'historique et des auteurs (TP1)
-│   ├── test_model.py             # 4 tests sur le modèle et metrics.json (TP2)
-│   └── test_ui.py                # 6 tests sur les helpers Streamlit (TP3)
+├── README.md, TP1-ENONCE.md, TP2-ENONCE.md, TP3-ENONCE.md, TP4-ENONCE.md
+├── requirements.txt, requirements-dev.txt, requirements.lock, .gitignore, pytest.ini, pyproject.toml
+├── .pre-commit-config.yaml         # Crochets de pré-commit automatisés (ruff, mypy)
+├── .github/workflows/ci.yml        # Pipeline d'Intégration Continue (train, ruff, mypy, pytest >=95%)
+├── api/                            # Microservice REST FastAPI (TP3 & TP4)
+│   ├── __init__.py
+│   ├── main.py                     # Application ASGI, routes, lifespan et gestion 500/503
+│   ├── schemas.py                  # Contrats Pydantic v2 (PredictRequest, PredictResponse, Label)
+│   └── model.py                    # Raccord modèle, seuil d'abstention (0.60) et contrôle des classes
+├── src/                            # Pipeline ML et scripts de mesure (TP2 & TP4)
+│   ├── make_demo.py                # Générateur du jeu de démo (290 avis)
+│   ├── train.py                    # Entraînement scikit-learn (démo et Allociné)
+│   ├── evaluate.py                 # Matrice de confusion et rapport de classification
+│   ├── predict.py                  # Fonction d'inférence avec signature TypedDict Resultat
+│   ├── courbe_seuil.py             # Calculateur empirique de la courbe de compromis abstention/erreur
+│   └── bilan_jeu_or.py             # Évaluateur opérationnel du jeu d'or
+├── tests/                          # 83 tests automatisés (+ 2 xfailed)
+│   ├── test_environment.py        # 23 tests de conformité de l'environnement (TP1)
+│   ├── test_cadrage.py            # 12 tests des fiches de cadrage (TP1)
+│   ├── test_git_history.py        # 3 tests de l'historique et des contributions (TP1)
+│   ├── test_model.py              # 4 tests sur le modèle et metrics.json (TP2)
+│   ├── test_api.py                # 6 tests de bon fonctionnement de l'API (TP3)
+│   ├── test_limites.py            # 10 tests aux limites et propriétés Hypothesis (TP4)
+│   ├── test_integration.py        # 6 tests d'intégration, résilience 500 et démarrage réel (TP4)
+│   └── test_jeu_or.py             # 21 tests de validation du jeu d'or (TP4)
 ├── models/
 │   ├── .gitkeep
-│   ├── metrics.json               # Métriques versionnées (preuve de qualité pour la CI)
-│   └── sentiment.joblib           # Binaire du modèle (local, ignoré par Git)
-├── Resume/
-│   ├── RESUME_GLOBAL.md           # Synthèse globale des TP1, TP2 et TP3
-│   ├── RESUME_TP2.md             # Synthèse TP2
-│   ├── RESUME_TP1.pdf             # Synthèse TP1
-│   └── screenshots/              # Captures d'écran de démonstration Streamlit
+│   ├── metrics.json                # Métriques validées et versionnées dans Git
+│   └── sentiment.joblib            # Binaire sérialisé (local, exclu de Git)
+├── data/
+│   ├── sample_reviews.csv          # Échantillon de test
+│   ├── demo_reviews.csv           # Données synthétiques (régénérables par make_demo.py)
+│   └── jeu_or.csv                 # Jeu d'or de 20 avis annotés de référence (versionné)
 ├── docs/
-│   ├── semaine2.md                # Analyse des erreurs
-│   ├── semaine3.md                # Analyse du seuil d'incertitude
-│   ├── screenshots/              # Captures d'écran intégrées au compte rendu
-│   └── cadrage/                   # Fiches de décision
-└── data/
-    ├── sample_reviews.csv         # Échantillon de test
-    └── demo_reviews.csv          # Données de démo (régénérables par make_demo.py)
+│   ├── semaine2.md, semaine3.md, semaine4.md
+│   ├── journal-tp1-tp5.md          # Journal de bord complété pour chaque contrôle
+│   ├── captures/                   # Dossier de captures d'écran des jalons T0 à T34
+│   └── cadrage/                    # Fiches de cadrage des cas d'usage
+└── Resume/
+    ├── RESUME_TP4.md               # Compte rendu spécifique complet du TP4
+    ├── RESUME_TP2.md               # Compte rendu du TP2
+    └── RESUME_GLOBAL.md            # Synthèse globale initiale
 ```
 
 ---
 
-## Membres du binôme
+## Membres du Binôme et Répartition des Travaux
 
-| Rôle | Nom | Identifiant GitHub | Travaux réalisés sur l'ensemble du projet |
-| :--- | :--- | :--- | :--- |
-| **Membre A** | Hiba Ayatallah | [@HibaAyatallah](https://github.com/HibaAyatallah) | - **TP1 :** Création du dépôt GitHub, cadrage en binôme, documentation.<br>- **TP2 :** Cadrage métier, revue des métriques d'évaluation.<br>- **TP3 :** Conception fonctionnelle de l'interface et validation des cas de tests métier. |
-| **Membre B** | Manal Wassila | [@manalwassila](https://github.com/manalwassila) | - **TP1 :** Configuration de l'environnement virtuel, validation des tests CI.<br>- **TP2 :** Pipeline scikit-learn, entraînement Allociné, analyse des erreurs.<br>- **TP3 :** Développement des composants Streamlit, fonctions de helpers, tests unitaires UI. |
+| Membre | Identifiant GitHub | Contributions principales (TP1 à TP4) |
+| :--- | :--- | :--- |
+| **Manal Wassila** | [@manalwassila](https://github.com/manalwassila) | - **TP1 :** Configuration de l'environnement virtuel Python 3.11, diagnostic de build et CI GitHub Actions.<br>- **TP2 :** Pipeline scikit-learn, entraînement du modèle sur le corpus Allociné, analyse qualitative des erreurs d'inférence.<br>- **TP3 :** Architecture de l'API FastAPI, implémentation des schémas Pydantic et des tests d'API (`test_api.py`).<br>- **TP4 :** Implémentation des tests aux limites et des propriétés Hypothesis (`test_limites.py`), analyse de la courbe de seuil (`courbe_seuil.py`), gestion de l'abstention à 0.60, rédaction de `docs/semaine4.md` et `Resume/RESUME_TP4.md`. |
+| **Hiba Ayatallah** | [@HibaAyatallah](https://github.com/HibaAyatallah) | - **TP1 :** Création du dépôt GitHub, cadrage multicritère des cas d'usage, structuration initiale de la documentation.<br>- **TP2 :** Cadrage métier, validation des métriques de classification et des seuils F1 macro.<br>- **TP3 :** Validation des endpoints `/health` et `/predict`, tests manuels Swagger et vérification du démarrage *fail-fast*.<br>- **TP4 :** Rédaction et annotation des avis du jeu d'or (`data/jeu_or.csv`), identification des cas difficiles et erreurs connues (`test_jeu_or.py`), conception des tests d'intégration et pannes 500 (`test_integration.py`), intégration des linters `ruff`, typage `mypy` et configuration `pre-commit`. |
