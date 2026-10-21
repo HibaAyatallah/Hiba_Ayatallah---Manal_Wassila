@@ -54,17 +54,14 @@ git config --global user.name
 **Obtenu** :
 
 ```text
-py -0 : -V:3.11 *Python 3.11 (64-bit)
-py -3.11 --version : Python 3.11.9
-git --version : git version 2.45.2.windows.1
-git config --global user.name : Manal Wassila
+À compléter
 ```
 
 - [x] Conforme
 
 **Commentaire** :
 
-> L'interpréteur Python 3.11.9 est correctement installé et reconnu sous Windows. L'identité Git du membre A est configurée globalement pour assurer l'attribution correcte des commits.
+> À compléter.
 
 ![Poste du membre A](captures/tp0-poste-membre-a.png)
 
@@ -95,7 +92,6 @@ git config --global user.name : Hiba Ayatallah
 > Le poste du membre B dispose d'une installation Python 3.11.9 identique et de sa propre identité Git distincte, condition indispensable pour valider le contrôle d'historique à deux auteurs.
 
 ![Poste du membre B](captures/tp0-poste-membre-b.png)
-
 ---
 
 ## TP1 : cadrer l'application et préparer l'environnement
@@ -149,16 +145,14 @@ python -m pytest -q
 **Obtenu** (version de Python, résumé du diagnostic, dernière ligne de pytest) :
 
 ```text
-Python 3.11.9
-check_setup.py : 1 erreur(s) (dépôt Git absent) et 3 avertissement(s) (fiches vides)
-pytest : 3 failed, 31 passed, 4 skipped in 1.82s
+À compléter
 ```
 
 - [x] Conforme
 
 **Commentaire** (que réclament les trois échecs, et pourquoi quatre tests sont ignorés ?) :
 
-> Les trois échecs correspondent aux tests de `tests/test_cadrage.py` qui réclament que les fiches cas1, cas2 et cas3 soient rédigées. Les quatre tests ignorés (`tests/test_git_history.py`) attendent que le dépôt Git soit initialisé (`git init`) avec ses premiers commits.
+> À compléter.
 
 ![T1 : pytest au départ](captures/tp1-t1-pytest.png)
 
@@ -174,15 +168,14 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-python -m pytest tests/test_cadrage.py -q : 12 passed in 0.45s
-python -m pytest -q : 34 passed, 4 skipped in 2.10s
+À compléter
 ```
 
 - [x] Conforme
 
 **Commentaire** (l'approche retenue pour chacun des trois cas, et les deux critères qui la justifient) :
 
-> Pour le cas 1 (pharmacie), l'approche retenue est la prédiction par lot, justifiée par (b) la vérifiabilité des alertes et (c) le coût d'inférence. Pour le cas 2 (règlement), l'approche est déterministe par règles strictes, justifiée par (b) la vérifiabilité juridique et (d) la conséquence critique d'une erreur. Pour le cas 3 (avis négatifs), l'approche retenue est un modèle statistique supervisé temps réel, justifiée par (a) la présence de données étiquetées et (d) l'impact direct d'un faux négatif sur la réputation client.
+> À compléter.
 
 ![T2 : fiches complètes](captures/tp1-t2-cadrage.png)
 
@@ -204,15 +197,14 @@ python -m pytest -q
 **Obtenu** (extrait de `git status`, dernière ligne de pytest) :
 
 ```text
-git status : Sur la branche main, rien à valider, la copie de travail est propre (fichiers .venv/, .env et modèles binaires exclus)
-pytest -q : 37 passed, 1 failed in 2.35s (FAILED tests/test_git_history.py::test_two_authors)
+À compléter
 ```
 
 - [x] Conforme
 
 **Commentaire** (quel test échoue encore, et pourquoi ?) :
 
-> Le seul test en échec est `test_git_history.py::test_two_authors` car pour l'instant un seul membre (membre A) a réalisé un commit dans le dépôt ; le test exige deux auteurs distincts.
+> À compléter.
 
 ![T3 : le dépôt sur GitHub](captures/tp1-t3-depot-github.png)
 
@@ -232,15 +224,14 @@ python scripts/check_setup.py
 **Obtenu** :
 
 ```text
-python scripts/check_setup.py : 0 erreur(s), 0 avertissement(s)
-Diagnostic : Environnement Python 3.11 et paquets conformes.
+À compléter
 ```
 
 - [x] Conforme
 
 **Commentaire** :
 
-> Le membre B a configuré avec succès son environnement virtuel local sur son poste sans rencontrer d'erreur de dépendances.
+> À compléter.
 
 ![T4 : diagnostic du membre B](captures/tp1-t4-check-setup-b.png)
 
@@ -260,17 +251,14 @@ python -m pytest tests/test_git_history.py -q
 **Obtenu** :
 
 ```text
-git shortlog -sn --all :
-     1  Hiba Ayatallah
-     1  Manal Wassila
-pytest tests/test_git_history.py -q : 3 passed in 0.28s
+À compléter
 ```
 
 - [x] Conforme
 
 **Commentaire** :
 
-> L'historique Git compte désormais deux contributeurs distincts avec des adresses e-mails valides, validant ainsi la totalité des tests d'historique.
+> À compléter.
 
 ![T5 : deux auteurs](captures/tp1-t5-shortlog.png)
 
