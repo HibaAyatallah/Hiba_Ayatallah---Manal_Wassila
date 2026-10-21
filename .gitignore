@@ -38,3 +38,6 @@ htmlcov/
 .ruff_cache/
 !data/jeu_or.csv
 !data/demo_reviews.csv
+
+# TP5
+!data/avis_exemple.csv

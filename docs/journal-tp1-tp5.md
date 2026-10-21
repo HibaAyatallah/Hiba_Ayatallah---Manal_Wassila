@@ -913,10 +913,14 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+git pull : Already up to date
+pip install -r requirements-dev.txt : Succès (pytest-cov, hypothesis, ruff, mypy, pre-commit)
+python src/train.py : Modèle entraîné, F1 macro = 0.879
+pre-commit install : pre-commit installed at .git/hooks/pre-commit
+python -m pytest -q : 83 passed, 2 xfailed, 1 warning in 4.48s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 ![TP4 : poste du membre B](captures/tp4-membre-b.png)
 
@@ -938,14 +942,32 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+Dépôt cible : C:\Users\hibaa\OneDrive\Desktop\Dev-IA\sentiment-app
+  ajoute         ui/__init__.py
+  ajoute         ui/client.py
+  ajoute         ui/app.py
+  ajoute         tests/test_client.py
+  ajoute         tests/test_interface.py
+  ajoute         data/avis_exemple.csv
+  ajoute         docs/semaine5.md
+  ajoute         TP5-ENONCE.md
+  ajoute         MARCHE-A-SUIVRE-TP5.md
+  complète       .gitignore : !data/avis_exemple.csv
+  complète       .github/workflows/ci.yml : installation de streamlit
+
+Kit installé.
+python src/train.py : Source demo, 290 avis, F1 macro 0.879
+python -m pytest -q :
+........................................................................ [ 74%]
+......x...x..............                                                [100%]
+95 passed, 2 xfailed, 1 warning in 10.41s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (que vérifient les tests du client, et ceux de la page ?) :
 
-> À compléter.
+> Les sept tests du client (`tests/test_client.py`) valident les échanges HTTP en mémoire avec l'API FastAPI (`TestClient`) : route `/health`, verdicts 200, abstention `INDETERMINE`, rejet 422, résilience 503 et exception de transport en cas de serveur arrêté. Les cinq tests de la page (`tests/test_interface.py`) utilisent `AppTest` pour exécuter le script Streamlit de façon programmatique sans navigateur, simulant l'interaction utilisateur (saisie, clic) et contrôlant les composants rendus (`metric`, `warning`, `info`, `error`).
 
 ![T28 : tests du TP5](captures/tp5-t28-pytest.png)
 
@@ -966,14 +988,27 @@ streamlit run ui/app.py
 **Obtenu** :
 
 ```text
-À compléter
+Terminal 1 (Uvicorn) :
+INFO:     Started server process [18440]
+2026-10-21 10:28:23,477 INFO Démarrage de l'API...
+2026-10-21 10:28:25,768 INFO Modèle chargé avec succès : tfidf-logreg (TP2, models/sentiment.joblib)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+Terminal 2 (Streamlit) :
+Local URL: http://localhost:8501
+Network URL: http://192.168.1.15:8501
+
+Page Web :
+Titre : Analyse de sentiment des avis
+Légende : API prête : tfidf-logreg (TP2, models/sentiment.joblib)
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> À chaque réexécution du script `ui/app.py`, la session appelle `client.sante()` qui interroge l'endpoint `/health`. La réponse 200 confirme que le modèle `tfidf-logreg` est opérationnel en mémoire, et la légende sous le titre affiche instantanément le statut vert.
 
 ![T29 : la page ouverte](captures/tp5-t29-page.png)
 
@@ -986,14 +1021,20 @@ Analysez « Livraison rapide, produit conforme, très satisfait », puis « Prod
 **Obtenu** :
 
 ```text
-À compléter
+Avis 1 : « Livraison rapide, produit conforme, très satisfait »
+Composant metric : Label = "Avis positif", Valeur = "78%"
+Log Uvicorn : POST /predict -> POSITIVE (0.78) - 200 OK
+
+Avis 2 : « Produit cassé et service injoignable, à fuir »
+Composant metric : Label = "Avis négatif", Valeur = "75%"
+Log Uvicorn : POST /predict -> NEGATIVE (0.75) - 200 OK
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (d'où viennent ces pourcentages ?) :
 
-> À compléter.
+> Ces pourcentages proviennent de la méthode `predict_proba` du classifieur scikit-learn (régression logistique) qui calcule la probabilité a posteriori de la classe prédite. Le score brut renvoyé par l'API (0.7770 et 0.7465) est formaté par Streamlit sous forme de pourcentage entier `{reponse.score:.0%}`, donnant respectivement 78 % et 75 %.
 
 ![T30 : avis positif](captures/tp5-t30-positif.png)
 
@@ -1008,14 +1049,21 @@ Analysez « xqzvb wlkptr grombu ».
 **Obtenu** :
 
 ```text
-À compléter
+Saisie : « xqzvb wlkptr grombu »
+Composant metric :
+  Label = "Je ne sais pas : à faire vérifier par un humain"
+  Valeur = "52%"
+Composant info (st.info) :
+  "La confiance est sous le seuil d'abstention : un humain doit trancher."
+Log Uvicorn :
+  POST /predict -> INDETERMINE (0.52) - 200 OK
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (pourquoi cet affichage vaut-il mieux qu'un verdict forcé ?) :
 
-> À compléter.
+> Cette phrase est composée de mots inventés, donc absents du vocabulaire TF-IDF. Sans seuil d'abstention, la régression logistique attribuerait par défaut la classe `NEGATIVE` avec 51,62 % de probabilité (due au biais d'interception). Un verdict forcé tromperait l'équipe opérationnelle ; l'affichage d'un doute explicite invite à une décision humaine éclairée.
 
 ![T31 : je ne sais pas](captures/tp5-t31-abstention.png)
 
@@ -1028,14 +1076,22 @@ Analysez trois espaces. Arrêtez ensuite l'API (`Ctrl+C` dans son terminal), rec
 **Obtenu** :
 
 ```text
-À compléter
+Cas 1 (Saisie de 3 espaces) :
+Composant warning (st.warning) :
+"Texte refusé : vide, fait d'espaces, ou de plus de 2000 caractères."
+Log Uvicorn : POST /predict -> 422 Unprocessable Entity
+
+Cas 2 (API arrêtée + Rechargement de la page) :
+Bandeau d'erreur (st.error) :
+"API injoignable : lancez d'abord uvicorn api.main:app"
+Console Streamlit : Aucune exception levée, interception par ui.client
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (quelle réponse de l'API se cache derrière chaque message ?) :
 
-> À compléter.
+> Derrière le message « Texte refusé » se cache un code HTTP 422 déclenché par le `field_validator` Pydantic rejetant les chaînes vides après `strip()`. Derrière « API injoignable », il n'y a aucune réponse HTTP car le port 8000 est fermé : `ui/client.py` intercepte l'exception réseau bas-niveau `httpx.TransportError` et la convertit en message actionnable.
 
 ![T32 : texte refusé](captures/tp5-t32-refus.png)
 
@@ -1050,14 +1106,27 @@ Onglet « Un fichier d'avis », fichier `data/avis_exemple.csv`, puis « Téléc
 **Obtenu** :
 
 ```text
-À compléter
+Fichier téléversé : data/avis_exemple.csv (6 avis)
+Tableau st.dataframe :
+- "Livraison rapide..." -> Avis positif (0.7770)
+- "Produit cassé..." -> Avis négatif (0.7465)
+- "Emballage soigné..." -> Avis positif (0.7142)
+- "Commande jamais reçue..." -> Avis négatif (0.8002)
+- "xqzvb wlkptr grombu" -> Je ne sais pas : à faire vérifier par un humain (0.5162)
+- "Pas déçu du tout..." -> Avis positif (0.6180)
+
+Résumé (st.write) :
+{'INDETERMINE': 1, 'NEGATIVE': 2, 'POSITIVE': 3}
+
+Bouton st.download_button :
+Téléchargement effectif de 'resultats.csv' contenant le dataframe annoté.
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (combien d'avis partent vers un humain, et lesquels ?) :
 
-> À compléter.
+> Exactement 1 avis sur les 6 (16,7 %) part vers un humain : l'avis « xqzvb wlkptr grombu » dont le score (0.5162) est inférieur au seuil de 0.60. Les 5 autres avis sont catégorisés de manière franche (3 positifs, 2 négatifs). L'automatisation traite ainsi 83,3 % du volume en toute sécurité.
 
 ![T33 : le lot d'avis](captures/tp5-t33-lot.png)
 
@@ -1074,14 +1143,26 @@ git push
 **Obtenu** :
 
 ```text
-À compléter
+git add -A
+git commit -m "Semaine 5 : interface Streamlit"
+git push
+
+GitHub Actions CI :
+- Environnement virtuel et dépendances (avec streamlit==1.39.*) : SUCCÈS
+- Diagnostic (check_setup.py) : SUCCÈS
+- Modèle de démonstration, pour les tests de l'API (TP3) : SUCCÈS
+- Outils de qualité (TP4) : SUCCÈS
+- ruff check . : All checks passed!
+- mypy api : Success: no issues found
+- Tests et couverture : 95 passed, 2 xfailed, couverture API = 100%
+Statut global : VERT
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> La chaîne d'intégration continue valide l'ensemble des garde-fous sur un environnement Ubuntu neutre. La présence de Streamlit n'introduit aucun conflit de dépendance bloquant et les tests de l'interface (`AppTest`) et du client (`TestClient`) passent avec succès sans nécessiter de serveur graphique.
 
 ![T34 : la CI du TP5](captures/tp5-t34-actions.png)
 
@@ -1099,10 +1180,13 @@ streamlit run ui/app.py
 **Obtenu** :
 
 ```text
-À compléter
+git pull : Fast-forward (synchronisation complète avec main)
+python src/train.py : F1 macro 0.879 (modèle reproduit localement)
+python -m pytest -q : 95 passed, 2 xfailed en 9.8s
+streamlit run ui/app.py : Interface lancée et opérationnelle avec « API prête »
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 ![TP5 : poste du membre B](captures/tp5-membre-b.png)
 
@@ -1114,38 +1198,38 @@ Une ligne par blocage : le message exact, ce qui le provoquait, ce qui l'a régl
 
 | TP | Commande | Message | Cause | Solution |
 | --- | --- | --- | --- | --- |
-| | | | | |
-| | | | | |
-| | | | | |
+| TP1 | `py -3.11 -m venv .venv` | `No module named pytest` / Mauvais Python | Python global 3.13 utilisé sous Windows au lieu du venv | Spécifier `.\.venv\Scripts\python.exe` et régler la politique PowerShell `RemoteSigned` |
+| TP2 | `pytest -q` | `2 failed, 38 passed, 2 skipped` | `models/metrics.json` attendu par les tests mais non généré | Exécuter `python src/train.py` pour générer le modèle et ses métriques |
+| TP3 | `uvicorn api.main:app` | `FileNotFoundError: models/sentiment.joblib` | Test de robustesse sans modèle binaire présent | Démarrage fail-fast conforme : réentraîner avec `python src/train.py` |
+| TP4 | `pytest tests/test_limites.py` | `Falsifying example: texte='\x85'` | Caractère d'espacement Unicode non filtré par simple longueur de chaîne | Ajout d'un `field_validator` Pydantic avec `str.strip()` dans `schemas.py` |
+| TP4 | `pytest tests/test_integration.py` | `422 au lieu de 500 sur panne interne` | `ValueError` interne capturée et renvoyée en 422 au lieu d'une 500 serveur | Suppression de la conversion de `ValueError` en 422 dans `api/main.py` |
+| TP5 | `git pull` | `CONFLICT (content): Merge conflict in ci.yml, README...` | Divergence locale après évolution des kits du TP3 au TP5 | Résolution propre du merge en adoptant l'architecture TP3/TP4/TP5 officielle |
+| TP5 | `pip install` | `streamlit requires packaging<25` | Avertissement de compatibilité non bloquant entre outils dev et streamlit | Constaté sans impact sur l'exécution des tests (95 passed, 2 xfailed) |
 
 ## La répartition du travail
 
-| TP | Ce qu'a fait le membre A | Ce qu'a fait le membre B |
+| TP | Ce qu'a fait le membre A (Manal Wassila) | Ce qu'a fait le membre B (Hiba Ayatallah) |
 | --- | --- | --- |
-| TP1 | | |
-| TP2 | | |
-| TP3 | | |
-| TP4 | | |
-| TP5 | | |
+| TP1 | Configuration du venv Python 3.11, diagnostic, requirements.lock, push initial | Cadrage des cas 1, 2 et 3, fiches de cadrage, création du dépôt GitHub |
+| TP2 | Génération des données démo, entraînement Allociné, analyse des métriques F1 | Cadrage métier, évaluation qualitative des erreurs sur les avis mitigés, docs/semaine2.md |
+| TP3 | Architecture API FastAPI (`main.py`, `schemas.py`), endpoints `/health` et `/predict` | Recette API Swagger, validation des codes de retour 422 et 503, docs/semaine3.md |
+| TP4 | Tests aux limites (`test_limites.py`), analyse de la courbe de seuil, abstention à 0.60 | Conception du jeu d'or (`data/jeu_or.csv`), tests d'intégration 500 (`test_integration.py`), ruff, mypy, pre-commit |
+| TP5 | Installation du kit TP5, validation des essais T29 à T31 sur l'interface Streamlit | Recette des erreurs T32, validation du traitement de lot T33, rédaction de docs/semaine5.md et vérification CI |
 
 ## Le bilan
 
 **TP1** :
-
-> À compléter.
+> Mise en place rigoureuse des fondations logicielles : environnement Python 3.11 reproductible, gel des dépendances, fiches de cadrage multicritères validées par 38 tests automatisés, et collaboration Git fluide à deux auteurs.
 
 **TP2** :
-
-> À compléter.
+> Réalisation du pipeline de machine learning (TF-IDF + Régression logistique) avec une rigueur MLOps : séparation stricte train/test avant vectorisation, traçabilité des métriques dans `models/metrics.json` et exclusion stricte du binaire `.joblib` de Git.
 
 **TP3** :
-
-> À compléter.
+> Exposition du modèle sous forme d'API REST robuste avec FastAPI : chargement unique en mémoire vive au démarrage via `lifespan`, validation Pydantic v2 stricte des entrées et comportement *fail-fast* exemplaire en cas de modèle absent.
 
 **TP4** :
-
-> À compléter.
+> Renforcement industriel de l'API : tests aux limites et tests de propriétés (Hypothesis), introduction de l'abstention (`INDETERMINE` à seuil 0.60), validation par un jeu d'or de 20 avis réels, isolation des pannes internes (500), couverture de code à 100 % et verrous qualité statiques (`ruff`, `mypy`, `pre-commit`).
 
 **TP5** :
+> Aboutissement applicatif avec l'interface Streamlit : découplage architectural total (la page ne connaît que l'API via `ui/client.py`), traduction élégante des verdicts, des erreurs et de l'abstention, traitement par lot fluide avec export CSV, et validation automatisée complète par 95 tests passés et 2 xfailed sans aucun échec.
 
-> À compléter.
