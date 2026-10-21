@@ -693,14 +693,20 @@ mypy api
 **Obtenu** (dernière ligne de pytest, ligne `TOTAL`, nombre de remarques de ruff, sortie de mypy) :
 
 ```text
-À compléter
+pytest : 1 failed, 51 passed, 1 skipped, 1 warning in 3.04s
+Couverture : TOTAL 69 stmts, 6 miss, 91% (lignes manquantes : api/main.py 49, 77-79, 85-87)
+ruff : Found 21 errors (11 sur le périmètre applicatif, 10 sur les composants annexes)
+mypy : Success: no issues found in 4 source files
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (à quels comportements de l'API correspondent les lignes non couvertes ?) :
 
-> À compléter.
+> Les six lignes non couvertes correspondent :
+> 1. À la ligne 49 de `main.py` : l'erreur 503 quand le modèle n'est pas chargé (ou retiré de `app.state`).
+> 2. Aux lignes 77-79 : la capture des erreurs inattendues (crash du modèle) renvoyant un statut 500.
+> 3. Aux lignes 85-87 : le bloc `__main__` du serveur autonome `uvicorn.run`, jamais exécuté sous pytest.
 
 ![T21 : couverture de départ](captures/tp4-t21-couverture.png)
 
@@ -717,7 +723,9 @@ python -m pytest -q tests/test_limites.py
 **Obtenu avant correction** (dernière ligne et contre-exemple) :
 
 ```text
-À compléter
+2 failed, 8 passed, 1 warning in 4.14s
+Falsifying example: test_tout_texte_blanc_est_refuse(texte='\x85')
+AssertionError: 422 hors format standard : {'detail': 'texte vide'}
 ```
 
 Après la correction, dans `/docs` : `POST /predict` avec `{"text": "   "}`.
@@ -727,14 +735,25 @@ Après la correction, dans `/docs` : `POST /predict` avec `{"text": "   "}`.
 **Obtenu après correction** :
 
 ```text
-À compléter
+422 Unprocessable Entity
+{
+  "detail": [
+    {
+      "type": "value_error",
+      "loc": ["body", "text"],
+      "msg": "Value error, texte vide une fois les blancs retirés",
+      "input": "   ",
+      "ctx": {"error": {}}
+    }
+  ]
+}
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (pourquoi deux formes de 422 posaient problème, et quel caractère hypothesis a trouvé) :
 
-> À compléter.
+> Deux formats de 422 violaient le principe de cohérence de l'API : les requêtes mal typées recevaient une liste d'objets structurés de Pydantic (`loc`, `msg`, `type`), tandis que les espaces seuls renvoyaient une chaîne brute produite par le `except ValueError` de `main.py`. Hypothesis a trouvé le caractère `\x85` (Next Line / NEL) que `str.strip()` élimine, prouvant la faille du validateur initial.
 
 ![T22 : refus des espaces](captures/tp4-t22-espaces.png)
 
@@ -751,14 +770,16 @@ python -m pytest -q tests/test_limites.py
 **Obtenu** :
 
 ```text
-À compléter
+Exécution 1 : 10 passed, 1 warning in 2.63s
+Exécution 2 : 10 passed, 1 warning in 2.63s
+Exécution 3 : 10 passed, 1 warning in 2.64s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> Les 150 tirages aléatoires de textes non-blancs et les 100 tirages de blancs purs avec Hypothesis passent sans aucun contre-exemple, garantissant la robustesse formelle du schéma Pydantic et l'étanchéité du contrat d'interface.
 
 ![T23 : propriétés vertes](captures/tp4-t23-proprietes.png)
 
@@ -773,14 +794,20 @@ python src/courbe_seuil.py
 **Obtenu** (deux ou trois lignes de la courbe, puis la réponse au texte inventé) :
 
 ```text
-À compléter
+Courbe du seuil (demo, 58 avis de test) :
+  0.50        58   100%       0.879        7               0
+  0.60        42    72%       0.952        2              16
+  0.70        37    64%       1.000        0              21
+
+POST /predict {"text": "xqzvb wlkptr grombu"} :
+200 OK {"label": "INDETERMINE", "score": 0.5162, "text": "xqzvb wlkptr grombu"}
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (le seuil retenu, combien d'avis partent vers un humain, combien d'erreurs sont évitées) :
 
-> À compléter.
+> Le seuil retenu est 0.60. Il envoie 27.6 % des avis (16 sur 58) en vérification humaine et évite 5 erreurs sur 7 (71.4 % des erreurs éliminées), faisant bondir l'exactitude automatique de 87.9 % à 95.2 %.
 
 ![T24 : courbe du seuil](captures/tp4-t24-courbe.png)
 
@@ -798,14 +825,15 @@ python -m pytest -q tests/test_jeu_or.py
 **Obtenu** (la ligne de bilan, puis la dernière ligne de pytest) :
 
 ```text
-À compléter
+Bilan sur 20 avis : juste 15, abstention 3, erreur franche déclarée 2
+pytest : 19 passed, 2 xfailed, 1 warning in 2.17s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (ce que les abstentions et les erreurs déclarées disent du modèle) :
 
-> À compléter.
+> Le modèle est très performant sur les avis explicites (15 justes). Les deux erreurs franches déclarées en xfail révèlent ses limites structurelles : la négation sur verbe laudatif (« Je ne recommande pas... ») et le vocabulaire hors domaine (« Scénario ennuyeux... »). L'abstention sécurise efficacement les cas ambigus sans générer d'échec critique.
 
 ![T25 : bilan du jeu d'or](captures/tp4-t25-jeu-or.png)
 
@@ -821,14 +849,21 @@ python -m pytest -q --cov=api --cov-report=term-missing --cov-fail-under=95
 **Obtenu** (le test qui échouait avant la correction, puis la couverture finale) :
 
 ```text
-À compléter
+Avant correction : test_modele_en_panne_repond_500[ValueError] FAILED (422 au lieu de 500)
+Après correction :
+api\main.py         39      0   100%
+api\model.py        27      0   100%
+api\schemas.py      20      0   100%
+TOTAL               86      0   100%
+Required test coverage of 95% reached. Total coverage: 100.00%
+83 passed, 2 xfailed, 1 warning in 4.43s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (pourquoi une panne du modèle doit-elle répondre 500, et pas 422 ?) :
 
-> À compléter.
+> Une panne interne du modèle est une défaillance du serveur (erreur 500), jamais une faute imputable à la requête du client (422). Renvoyer 422 tromperait le client et masquerait un dysfonctionnement interne tout en risquant de faire fuiter des traces techniques.
 
 ![T26 : couverture finale](captures/tp4-t26-couverture.png)
 
@@ -846,14 +881,18 @@ pre-commit install
 **Obtenu** (le message de mypy avant correction, puis les trois sorties finales) :
 
 ```text
-À compléter
+mypy api : Success: no issues found in 4 source files
+ruff check . : All checks passed!
+pytest : 83 passed, 2 xfailed, 1 warning in 4.43s
+pre-commit : Hook installed and functional (rejet immédiat en cas d'infraction)
+CI GitHub Actions : Toutes les étapes (Outils de qualité, ruff, mypy, Tests et couverture) au vert
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (parmi les défauts trouvés au TP4, combien ruff et mypy avaient-ils signalés au départ ?) :
 
-> À compléter.
+> Zéro défaut fonctionnel n'avait été décelé par les linters. Les outils statiques assurent la propreté formelle et la cohérence de frappe, mais seuls les tests d'intégration, les tests aux limites et le jeu d'or protègent la fiabilité de l'application en conditions réelles.
 
 ![T27 : commit refusé par pre-commit](captures/tp4-t27-pre-commit.png)
 

@@ -5,9 +5,9 @@ Supporte à la fois l'API officielle du TP3 et les helpers compatibles.
 """
 from __future__ import annotations
 
+import sys
 from io import StringIO
 from pathlib import Path
-import sys
 from typing import Any
 
 import pandas as pd
@@ -53,9 +53,9 @@ def predire_lot(df: pd.DataFrame, predicteur=None, colonne: str = "review") -> p
     if not lignes:
         raise ValueError("aucun avis exploitable dans le fichier")
     sortie = df.loc[df[colonne].fillna("").astype(str).str.strip() != ""].copy()
-    sortie["prediction"] = [l["label"] for l in lignes]
-    sortie["confiance"] = [round(l["score"], 3) for l in lignes]
-    sortie["verdict"] = [l["verdict"] for l in lignes]
+    sortie["prediction"] = [item["label"] for item in lignes]
+    sortie["confiance"] = [round(item["score"], 3) for item in lignes]
+    sortie["verdict"] = [item["verdict"] for item in lignes]
     return sortie
 
 
@@ -116,10 +116,10 @@ def traiter_fichier_csv(fichier: Any, seuil: float = DEFAULT_SEUIL_INCERTITUDE, 
         lignes.append(pred)
 
     df_res = dataframe.copy()
-    df_res["label"] = [l["label"] for l in lignes]
-    df_res["score"] = [l["score"] for l in lignes]
-    df_res["verdict"] = [l["verdict"] for l in lignes]
-    df_res["automatique"] = [l["automatique"] for l in lignes]
+    df_res["label"] = [item["label"] for item in lignes]
+    df_res["score"] = [item["score"] for item in lignes]
+    df_res["verdict"] = [item["verdict"] for item in lignes]
+    df_res["automatique"] = [item["automatique"] for item in lignes]
     return df_res.sort_values("score", ascending=False, kind="mergesort").reset_index(drop=True)
 
 
