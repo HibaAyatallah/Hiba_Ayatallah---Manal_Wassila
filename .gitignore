@@ -37,3 +37,4 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 !data/jeu_or.csv
+!data/demo_reviews.csv
