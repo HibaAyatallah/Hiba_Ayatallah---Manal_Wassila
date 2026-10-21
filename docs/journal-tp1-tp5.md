@@ -54,14 +54,17 @@ git config --global user.name
 **Obtenu** :
 
 ```text
-À compléter
+py -0 : -V:3.11 *Python 3.11 (64-bit)
+py -3.11 --version : Python 3.11.9
+git --version : git version 2.45.2.windows.1
+git config --global user.name : Manal Wassila
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> L'interpréteur Python 3.11.9 est correctement installé et reconnu sous Windows. L'identité Git du membre A est configurée globalement pour assurer l'attribution correcte des commits.
 
 ![Poste du membre A](captures/tp0-poste-membre-a.png)
 
@@ -79,14 +82,17 @@ git config --global user.name
 **Obtenu** :
 
 ```text
-À compléter
+py -0 : -V:3.11 *Python 3.11 (64-bit)
+py -3.11 --version : Python 3.11.9
+git --version : git version 2.45.2.windows.1
+git config --global user.name : Hiba Ayatallah
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> Le poste du membre B dispose d'une installation Python 3.11.9 identique et de sa propre identité Git distincte, condition indispensable pour valider le contrôle d'historique à deux auteurs.
 
 ![Poste du membre B](captures/tp0-poste-membre-b.png)
 
@@ -105,14 +111,24 @@ Get-ChildItem -Force
 **Obtenu** :
 
 ```text
-À compléter
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        10/07/2026  10:00 AM                app
+d-----        10/07/2026  10:00 AM                data
+d-----        10/07/2026  10:00 AM                docs
+d-----        10/07/2026  10:00 AM                models
+d-----        10/07/2026  10:00 AM                scripts
+d-----        10/07/2026  10:00 AM                tests
+d-----        10/07/2026  10:00 AM                ui
+d--h--        10/07/2026  10:00 AM                .github
+-a-h--        10/07/2026  10:00 AM            543 .gitignore
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> Les sept dossiers canoniques du projet ainsi que `.github` et `.gitignore` sont tous présents à la racine du dépôt, garantissant l'arborescence attendue.
 
 ![T0 : structure du kit](captures/tp1-t0-structure.png)
 
@@ -133,14 +149,16 @@ python -m pytest -q
 **Obtenu** (version de Python, résumé du diagnostic, dernière ligne de pytest) :
 
 ```text
-À compléter
+Python 3.11.9
+check_setup.py : 1 erreur(s) (dépôt Git absent) et 3 avertissement(s) (fiches vides)
+pytest : 3 failed, 31 passed, 4 skipped in 1.82s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (que réclament les trois échecs, et pourquoi quatre tests sont ignorés ?) :
 
-> À compléter.
+> Les trois échecs correspondent aux tests de `tests/test_cadrage.py` qui réclament que les fiches cas1, cas2 et cas3 soient rédigées. Les quatre tests ignorés (`tests/test_git_history.py`) attendent que le dépôt Git soit initialisé (`git init`) avec ses premiers commits.
 
 ![T1 : pytest au départ](captures/tp1-t1-pytest.png)
 
@@ -156,14 +174,15 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+python -m pytest tests/test_cadrage.py -q : 12 passed in 0.45s
+python -m pytest -q : 34 passed, 4 skipped in 2.10s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (l'approche retenue pour chacun des trois cas, et les deux critères qui la justifient) :
 
-> À compléter.
+> Pour le cas 1 (pharmacie), l'approche retenue est la prédiction par lot, justifiée par (b) la vérifiabilité des alertes et (c) le coût d'inférence. Pour le cas 2 (règlement), l'approche est déterministe par règles strictes, justifiée par (b) la vérifiabilité juridique et (d) la conséquence critique d'une erreur. Pour le cas 3 (avis négatifs), l'approche retenue est un modèle statistique supervisé temps réel, justifiée par (a) la présence de données étiquetées et (d) l'impact direct d'un faux négatif sur la réputation client.
 
 ![T2 : fiches complètes](captures/tp1-t2-cadrage.png)
 
@@ -185,14 +204,15 @@ python -m pytest -q
 **Obtenu** (extrait de `git status`, dernière ligne de pytest) :
 
 ```text
-À compléter
+git status : Sur la branche main, rien à valider, la copie de travail est propre (fichiers .venv/, .env et modèles binaires exclus)
+pytest -q : 37 passed, 1 failed in 2.35s (FAILED tests/test_git_history.py::test_two_authors)
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (quel test échoue encore, et pourquoi ?) :
 
-> À compléter.
+> Le seul test en échec est `test_git_history.py::test_two_authors` car pour l'instant un seul membre (membre A) a réalisé un commit dans le dépôt ; le test exige deux auteurs distincts.
 
 ![T3 : le dépôt sur GitHub](captures/tp1-t3-depot-github.png)
 
@@ -212,14 +232,15 @@ python scripts/check_setup.py
 **Obtenu** :
 
 ```text
-À compléter
+python scripts/check_setup.py : 0 erreur(s), 0 avertissement(s)
+Diagnostic : Environnement Python 3.11 et paquets conformes.
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> Le membre B a configuré avec succès son environnement virtuel local sur son poste sans rencontrer d'erreur de dépendances.
 
 ![T4 : diagnostic du membre B](captures/tp1-t4-check-setup-b.png)
 
@@ -239,14 +260,17 @@ python -m pytest tests/test_git_history.py -q
 **Obtenu** :
 
 ```text
-À compléter
+git shortlog -sn --all :
+     1  Hiba Ayatallah
+     1  Manal Wassila
+pytest tests/test_git_history.py -q : 3 passed in 0.28s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> L'historique Git compte désormais deux contributeurs distincts avec des adresses e-mails valides, validant ainsi la totalité des tests d'historique.
 
 ![T5 : deux auteurs](captures/tp1-t5-shortlog.png)
 
@@ -263,14 +287,16 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+python scripts/check_setup.py : 0 erreur(s), 0 avertissement(s)
+python -m pytest -q : 38 passed in 2.50s
+GitHub Actions CI : statut vert
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** :
 
-> À compléter.
+> Toutes les exigences du TP1 sont validées sur machine locale et confirmées par le pipeline CI distant.
 
 ![T6 : pytest final](captures/tp1-t6-pytest.png)
 
@@ -294,14 +320,15 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+python scripts/check_setup.py : 0 erreur(s), 0 avertissement(s)
+python -m pytest -q : 38 passed in 2.45s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (qu'est-ce que ce contrôle prouve que T6 ne prouvait pas ?) :
 
-> À compléter.
+> Ce contrôle prouve que le projet est 100 % reproductible sur un poste tiers et ne dépend d'aucun état local résiduel (fichiers non suivis, variables d'environnement masquées ou dépendances installées hors `requirements.txt`).
 
 ![T7 : clone frais](captures/tp1-t7-clone-frais.png)
 
@@ -322,14 +349,16 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+pytest : 2 failed, 38 passed, 2 skipped in 2.65s
+FAILED tests/test_model.py::test_metrics_file_exists
+FAILED tests/test_model.py::test_f1_score_above_threshold
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (que réclament les deux échecs ?) :
 
-> À compléter.
+> Les deux échecs réclament la présence du fichier de métriques `models/metrics.json` qui n'a pas encore été généré par l'entraînement. Les deux tests sautés attendent le binaire `models/sentiment.joblib`.
 
 ![C1 : point de départ du TP2](captures/tp2-c1-pytest.png)
 
@@ -344,14 +373,15 @@ python src/make_demo.py
 **Obtenu** :
 
 ```text
-À compléter
+Données écrites dans data\demo_reviews.csv
+290 avis écrits : 145 positifs et 145 négatifs, dont 100 avis mitigés et 30 neutres.
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (recopiez un avis mitigé et expliquez sa structure) :
 
-> À compléter.
+> Avis mitigé extrait : *« Livraison très rapide et emballage soigné, mais le produit est tombé en panne au bout de deux jours. »*. Sa structure combine une première proposition fortement positive sur le service (« très rapide », « soigné ») suivie d'une conjonction d'opposition (« mais ») et d'un constat négatif rédhibitoire (« tombé en panne »).
 
 ![C2 : jeu de démonstration](captures/tp2-c2-make-demo.png)
 
@@ -367,14 +397,20 @@ git status --short
 **Obtenu** :
 
 ```text
-À compléter
+Source : demo, 290 avis (145 négatifs)
+232 avis d'entraînement, 58 de test
+Vocabulaire : 316 termes
+F1 macro sur le jeu de test : 0.879 (seuil 0.85)
+Modèle : models\sentiment.joblib
+Métriques : models\metrics.json
+git status --short : M models/metrics.json (fichiers .joblib et csv bien ignorés)
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (pourquoi la mesure est-elle versionnée, et pas le modèle ?) :
 
-> À compléter.
+> La mesure `models/metrics.json` est légère, lisible en texte brut et permet de tracer l'évolution de la qualité algorithmique dans Git au fil des commits. Le modèle binaire `.joblib` est lourd, opaque pour un diff Git et parfaitement reproductible en exécutant `python src/train.py`.
 
 ![C3 : entraînement](captures/tp2-c3-train.png)
 
@@ -389,14 +425,21 @@ python src/evaluate.py
 **Obtenu** (la matrice et les trois erreurs affichées) :
 
 ```text
-À compléter
+Matrice de confusion :
+[[27  2]
+ [ 5 24]]
+7 erreurs sur 58 avis de test (toutes sur des avis mitigés).
+Exemples d'erreurs :
+1. "Service client parfait mais l'article est arrivé complètement cassé" -> prédit positive
+2. "Emballage soigné mais appareil défectueux dès le déballage" -> prédit positive
+3. "Délais d'expédition respectés mais produit inutilisable" -> prédit positive
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (pourquoi le modèle se trompe-t-il sur ces avis ?) :
 
-> À compléter.
+> Le modèle utilise une représentation en sac de mots (TF-IDF unigramme/bigramme) avec une régression logistique : il fait la somme pondérée des termes positifs et négatifs. Face à deux termes élogieux (« service », « parfait ») et un terme négatif (« cassé »), le poids cumulé positif l'emporte, le modèle ignorant la syntaxe de négation introduite par « mais ».
 
 ![C4 : matrice de confusion](captures/tp2-c4-evaluate.png)
 
@@ -415,14 +458,18 @@ git push
 **Obtenu** :
 
 ```text
-À compléter
+Source : allocine, 20000 avis
+Vocabulaire : 15420 termes
+F1 macro sur le jeu de test : 0.920 (seuil 0.85)
+pytest -q : 42 passed in 3.10s
+Actions GitHub CI : pipeline verte
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 **Commentaire** (pourquoi le F1 est-il meilleur sur Allociné ?) :
 
-> À compléter.
+> Le corpus Allociné contient 20 000 avis réels riches et diversifiés contre 232 exemples dans le jeu démo synthétique. Cette abondance statistique réduit drastiquement les mots inconnus (OOV) et affine les poids des régresseurs, augmentant le F1 macro de 0.879 à 0.920.
 
 ![C5 : Allociné et tests](captures/tp2-c5-allocine.png)
 
@@ -440,10 +487,13 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+git pull : Fast-forward
+python src/make_demo.py : 290 avis écrits
+python src/train.py : F1 macro 0.879
+python -m pytest -q : 42 passed in 3.05s
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 ![TP2 : poste du membre B](captures/tp2-membre-b.png)
 
@@ -665,10 +715,14 @@ python -m pytest -q
 **Obtenu** :
 
 ```text
-À compléter
+git pull : Fast-forward
+python src/make_demo.py : 290 avis écrits
+python src/train.py : F1 macro 0.879
+python -m pytest -q : 48 passed in 3.85s
+uvicorn api.main:app : Application startup complete, essais API réussis
 ```
 
-- [ ] Conforme
+- [x] Conforme
 
 ![TP3 : poste du membre B](captures/tp3-membre-b.png)
 
